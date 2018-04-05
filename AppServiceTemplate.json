@@ -1,0 +1,83 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appService_botChatServer_name": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_location": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_name": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_resourceGroup": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_skuName": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_skuTier": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_skuFamily": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_skuSize": {
+      "type": "string"
+    },
+    "appServicePlan_botchat20180404111219Plan_workerSizeId": {
+      "type": "int"
+    }
+  },
+  "resources": [
+    {
+      "location": "[parameters('appServicePlan_botchat20180404111219Plan_location')]",
+      "name": "[parameters('appService_botChatServer_name')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2015-08-01",
+      "tags": {
+        "[concat('hidden-related:', resourceId(parameters('appServicePlan_botchat20180404111219Plan_resourceGroup'),'Microsoft.Web/serverfarms', parameters('appServicePlan_botchat20180404111219Plan_name')))]": "empty"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverFarms', parameters('appServicePlan_botchat20180404111219Plan_name'))]"
+      ],
+      "kind": "api",
+      "properties": {
+        "name": "[parameters('appService_botChatServer_name')]",
+        "serverFarmId": "[resourceId(parameters('appServicePlan_botchat20180404111219Plan_resourceGroup'),'Microsoft.Web/serverfarms', parameters('appServicePlan_botchat20180404111219Plan_name'))]",
+        "kind": "api"
+      },
+      "resources": [
+        {
+          "name": "web",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "properties": {
+            "apiDefinition": {
+              "url": "[concat('https://', reference(resourceId('Microsoft.Web/sites', parameters('appService_botChatServer_name'))).hostnames[0], '/swagger/docs/v1')]"
+            }
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('appService_botChatServer_name'))]"
+          ]
+        }
+      ]
+    },
+    {
+      "location": "[parameters('appServicePlan_botchat20180404111219Plan_location')]",
+      "name": "[parameters('appServicePlan_botchat20180404111219Plan_name')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2015-08-01",
+      "sku": {
+        "name": "[parameters('appServicePlan_botchat20180404111219Plan_skuName')]",
+        "tier": "[parameters('appServicePlan_botchat20180404111219Plan_skuTier')]",
+        "family": "[parameters('appServicePlan_botchat20180404111219Plan_skuFamily')]",
+        "size": "[parameters('appServicePlan_botchat20180404111219Plan_skuSize')]"
+      },
+      "properties": {
+        "name": "[parameters('appServicePlan_botchat20180404111219Plan_name')]"
+      }
+    }
+  ]
+}
