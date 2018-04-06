@@ -14,51 +14,47 @@ namespace bot_chat.Dialogs
     [Serializable]
     public class BasicLuisDialog : LuisDialog<object>
     {
-        /*public BasicLuisDialog() : base(new LuisService(new LuisModelAttribute(
-            ConfigurationManager.AppSettings["LuisAppId"],
-            ConfigurationManager.AppSettings["LuisAPIKey"],
-            domain: ConfigurationManager.AppSettings["LuisAPIHostName"])))
-        {
-        }*/
-
         // Store notes in a dictionary that uses the title as a key
-        private readonly Dictionary<string, Note> noteByTitle = new Dictionary<string, Note>();
+        protected readonly Dictionary<string, Communication> communicationByContact = new Dictionary<string, Communication>();
+        //protected readonly Dictionary<string, Dialogs.Entity.Note> noteByTitle = new Dictionary<string, Dialogs.Entity.Note>();
 
         [Serializable]
-        public sealed class Note : IEquatable<Note>
+        public sealed class Communication : IEquatable<Communication>
         {
 
-            public string Title { get; set; }
-            public string Text { get; set; }
+            public string MessageType { get; set; }
+            public string ContactName { get; set; }
+            public string ContactAttribute { get; set; }
 
             public override string ToString()
             {
-                return $"[{this.Title} : {this.Text}]";
+                return $"[{this.MessageType} : {this.ContactName} : {this.ContactAttribute}]";
             }
 
-            public bool Equals(Note other)
+            public bool Equals(Communication other)
             {
                 return other != null
-                    && this.Text == other.Text
-                    && this.Title == other.Title;
+                    && this.ContactName == other.ContactName
+                    && this.ContactAttribute == other.ContactAttribute
+                    && this.MessageType == other.MessageType;
             }
 
             public override bool Equals(object other)
             {
-                return Equals(other as Note);
+                return Equals(other as Communication);
             }
 
             public override int GetHashCode()
             {
-                return this.Title.GetHashCode();
+                return this.ContactName.GetHashCode();
             }
         }
 
         // CONSTANTS        
         // Name of note title entity
-        public const string Entity_Note_Title = "Note.Title";
+        public const string Entity_Communication_ContactName = "Communication.ContactName";
         // Default note title
-        public const string DefaultNoteTitle = "default";
+        public const string DefaultCommunicationContactName = "default";
 
         [LuisIntent("None")]
         public async Task NoneIntent(IDialogContext context, LuisResult result)
@@ -92,63 +88,70 @@ namespace bot_chat.Dialogs
             context.Wait(MessageReceived);
         }
 
-        private Note noteToCreate;
-        private string currentTitle;
-        [LuisIntent("Note.Create")]
-        public Task NoteCreateIntent(IDialogContext context, LuisResult result)
+        // CONSTANTS
+        // Name of note title entity
+        public const string Entity_Communication_Name = "Communication.ContactName";
+        // Default note title
+        public const string DefaultCommunicationName = "default";
+
+
+        private Communication contactToCreate;
+        private string currentName;
+        [LuisIntent("Communication.AddContact")]
+        public Task AddContactIntent(IDialogContext context, LuisResult result)
         {
-            EntityRecommendation title;
-            if (!result.TryFindEntity(Entity_Note_Title, out title))
+            EntityRecommendation name;
+            if (!result.TryFindEntity(Entity_Communication_Name, out name))
             {
                 // Prompt the user for a note title
-                PromptDialog.Text(context, After_TitlePrompt, "What is the title of the note you want to create?");
+                PromptDialog.Text(context, After_NamePrompt, "What is a contact of the note you want to create?");
             }
             else
             {
-                var note = new Note() { Title = title.Entity };
-                noteToCreate = this.noteByTitle[note.Title] = note;
+                var comm = new Communication() { ContactName = name.Entity };
+                contactToCreate = this.communicationByContact[comm.ContactName] = comm;
 
                 // Prompt the user for what they want to say in the note           
-                PromptDialog.Text(context, After_TextPrompt, "What do you want to say in your note?");
+                PromptDialog.Text(context, After_NamePrompt, "What do you want to say in your contact?");
             }
 
             return Task.CompletedTask;
         }
 
-
-        private async Task After_TitlePrompt(IDialogContext context, IAwaitable<string> result)
+        private async Task After_NamePrompt(IDialogContext context, IAwaitable<string> result)
         {
-            EntityRecommendation title;
+            EntityRecommendation name;
             // Set the title (used for creation, deletion, and reading)
-            currentTitle = await result;
-            if (currentTitle != null)
+            currentName = await result;
+            if (currentName != null)
             {
-                title = new EntityRecommendation(type: Entity_Note_Title) { Entity = currentTitle };
+                name = new EntityRecommendation(type: Entity_Communication_Name) { Entity = currentName };
             }
             else
             {
                 // Use the default note title
-                title = new EntityRecommendation(type: Entity_Note_Title) { Entity = DefaultNoteTitle };
+                name = new EntityRecommendation(type: Entity_Communication_Name) { Entity = DefaultCommunicationName };
             }
 
             // Create a new note object 
-            var note = new Note() { Title = title.Entity };
+            var comm = new Communication() { ContactName =  name.Entity };
             // Add the new note to the list of notes and also save it in order to add text to it later
-            noteToCreate = this.noteByTitle[note.Title] = note;
+            contactToCreate = this.communicationByContact[comm.ContactName] = comm;
 
             // Prompt the user for what they want to say in the note           
-            PromptDialog.Text(context, After_TextPrompt, "What do you want to say in your note?");
+            PromptDialog.Text(context, After_NumberPrompt, "What do you want to say in your number?");
 
         }
 
-        private async Task After_TextPrompt(IDialogContext context, IAwaitable<string> result)
+        private async Task After_NumberPrompt(IDialogContext context, IAwaitable<string> result)
         {
             // Set the text of the note
-            noteToCreate.Text = await result;
+            contactToCreate.ContactAttribute = await result;
 
-            await context.PostAsync($"Created note **{this.noteToCreate.Title}** that says \"{this.noteToCreate.Text}\".");
+            await context.PostAsync($"Created contact **{this.contactToCreate.ContactName}** with \"{this.contactToCreate.ContactAttribute}\".");
 
             context.Wait(MessageReceived);
         }
+
     }
 }
