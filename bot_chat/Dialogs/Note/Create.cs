@@ -12,7 +12,6 @@ namespace bot_chat.Dialogs.Note
 {
     public class Create : BasicLuisDialog
     {
-        
         private Dialogs.Entity.Note noteToCreate;
         private string currentTitle;
 

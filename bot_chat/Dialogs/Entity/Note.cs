@@ -8,7 +8,6 @@ namespace bot_chat.Dialogs.Entity
     [Serializable]
     public sealed class Note : IEquatable<Note>
     {
-
         // CONSTANTS        
         // Name of note title entity
         public const string Entity_Note_Title = "Note.Title";

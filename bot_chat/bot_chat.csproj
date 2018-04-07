@@ -115,6 +115,8 @@
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Dialogs\AddContactDialogs.cs" />
     <Compile Include="Dialogs\BasicLuisDialog.cs" />
+    <Compile Include="Dialogs\Entity\Note.cs" />
+    <Compile Include="Dialogs\Note\Create.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

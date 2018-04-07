@@ -16,7 +16,7 @@ namespace bot_chat.Dialogs
     {
         // Store notes in a dictionary that uses the title as a key
         protected readonly Dictionary<string, Communication> communicationByContact = new Dictionary<string, Communication>();
-        //protected readonly Dictionary<string, Dialogs.Entity.Note> noteByTitle = new Dictionary<string, Dialogs.Entity.Note>();
+        protected readonly Dictionary<string, Dialogs.Entity.Note> noteByTitle = new Dictionary<string, Dialogs.Entity.Note>();
 
         [Serializable]
         public sealed class Communication : IEquatable<Communication>
