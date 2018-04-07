@@ -10,7 +10,7 @@ using Microsoft.Bot.Builder.Luis.Models;
 
 namespace bot_chat.Dialogs.Note
 {
-    public class Create : BasicLuisDialog
+    public class Create
     {
         private Dialogs.Entity.Note noteToCreate;
         private string currentTitle;
@@ -27,7 +27,7 @@ namespace bot_chat.Dialogs.Note
             else
             {
                 var note = new Dialogs.Entity.Note() { Title = title.Entity };
-                noteToCreate = this.noteByTitle[note.Title] = note;
+//                noteToCreate = this.noteByTitle[note.Title] = note;
 
                 // Prompt the user for what they want to say in the note           
                 PromptDialog.Text(context, After_TextPrompt, "What do you want to say in your note?");
@@ -55,7 +55,7 @@ namespace bot_chat.Dialogs.Note
             // Create a new note object 
             var note = new Dialogs.Entity.Note() { Title = title.Entity };
             // Add the new note to the list of notes and also save it in order to add text to it later
-            noteToCreate = this.noteByTitle[note.Title] = note;
+         //   noteToCreate = this.noteByTitle[note.Title] = note;
 
             // Prompt the user for what they want to say in the note           
             PromptDialog.Text(context, After_TextPrompt, "What do you want to say in your note?");
@@ -69,7 +69,7 @@ namespace bot_chat.Dialogs.Note
 
             await context.PostAsync($"Created note **{this.noteToCreate.Title}** that says \"{this.noteToCreate.Text}\".");
 
-            context.Wait(MessageReceived);
+          //  context.Wait(MessageReceived);
         }
     }
 }
