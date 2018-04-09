@@ -83,6 +83,8 @@ namespace bot_chat.Dialogs
         // Name of note title entity
         public const string Entity_Note_Title = "Note.Title";
         public const string Entity_Communication_Name = "Communication.ContactName";
+        public const string Entity_Name = "Name";
+        
         // Default note title
         public const string DefaultCommunicationName = "default";
         public const string DefaultNoteTitle = "default";
@@ -149,7 +151,18 @@ namespace bot_chat.Dialogs
         [LuisIntent("Communication.FindContact")]
         public Task FindContactIntent(IDialogContext context, LuisResult result)
         {
-            PromptDialog.Text(context, Find_NamePrompt, "Who you would like find?");
+            EntityRecommendation nameEntity;
+            string name;
+            if (result.TryFindEntity(Entity_Name, out nameEntity))
+            {
+                name = nameEntity.Entity;
+                PromptDialog.Text(context, Find_NamePrompt, $"So, you want find {name}");
+            }
+            else
+            {
+                PromptDialog.Text(context, Find_NamePrompt, "Who you would like find?");
+            }
+            
 
             return Task.CompletedTask;
         }
