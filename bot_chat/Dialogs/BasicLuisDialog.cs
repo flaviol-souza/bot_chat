@@ -9,14 +9,11 @@ using Microsoft.Bot.Builder.Luis.Models;
 
 namespace bot_chat.Dialogs
 {
-    // For more information about this template visit http://aka.ms/azurebots-csharp-luis
     [LuisModel("64af4146-e24f-431a-9bc4-77430ea5fe08", "c0983224e3704b58ad9acd6117d79ee2")]
     [Serializable]
     public class BasicLuisDialog : LuisDialog<object>
     {
-        // Store notes in a dictionary that uses the title as a key
-        private readonly Dictionary<string, Note> noteByTitle = new Dictionary<string, Note>();
-        private readonly Dictionary<string, Communication> communicationByContact = new Dictionary<string, Communication>();
+        private Dictionary<string, Communication> communicationByContact = new Dictionary<string, Communication>();
 
         [Serializable]
         public sealed class Communication : IEquatable<Communication>
@@ -139,7 +136,7 @@ namespace bot_chat.Dialogs
             else
             {
                 var comm = new Communication() { ContactName = name.Entity };
-                contact = this.communicationByContact[comm.ContactName] = comm;
+                contact = communicationByContact[comm.ContactName] = comm;
 
                 // Prompt the user for what they want to say in the note           
                 PromptDialog.Text(context, After_NamePrompt, "Nome do contato");
@@ -153,61 +150,67 @@ namespace bot_chat.Dialogs
         {
             EntityRecommendation nameEntity;
             string name;
-            if (result.TryFindEntity(Entity_Name, out nameEntity))
+            if(communicationByContact == null || communicationByContact.Count <= 0)
+            {
+                PromptDialog.Text(context, Find_NamePrompt, "Sorry, but I don't have nothing contact yet!");
+            }
+            else if (result.TryFindEntity(Entity_Name, out nameEntity))
             {
                 name = nameEntity.Entity;
-                PromptDialog.Text(context, Find_NamePrompt, $"So, you want find {name}");
+                if(communicationByContact.TryGetValue(name, out contact))
+                {
+                    PromptDialog.Text(context, Find_NamePrompt, $"I found the contact, Name **{contact.ContactName}** with **{contact.ContactAttribute}**");
+                }
+                else
+                {
+                    PromptDialog.Text(context, Find_NamePrompt, $"Sorry, I unable found {name}");                    
+                }
             }
             else
             {
-                PromptDialog.Text(context, Find_NamePrompt, "Who you would like find?");
+                PromptDialog.Text(context, Find_NamePrompt, "Who you would like find?");                
             }
             
-
             return Task.CompletedTask;
         }
-
+        
         private async Task Find_NamePrompt(IDialogContext context, IAwaitable<string> result)
         {
-            EntityRecommendation name;
             // Set the title (used for creation, deletion, and reading)
             currentName = await result;
             if (currentName != null)
             {
-                contact = this.communicationByContact[currentName];
-                if(contact != null)
+                if (communicationByContact.TryGetValue(currentName, out contact))
                 {
-                    await context.PostAsync($"'Found contact, Name= **{this.contact.ContactName}** with \"{this.contact.ContactAttribute}\".");
+                    await context.PostAsync($"Found contact, Name= **{this.contact.ContactName}** with \"{this.contact.ContactAttribute}\".");
                 }
                 else
                 {
-                    await context.PostAsync("Unfortunately, I unable found your contact! Probably it there isn't.");
-                }
-                context.Wait(MessageReceived);
+                    await context.PostAsync($"Unfortunately, I unable found your contact **{currentName}**! Probably it there isn't.");
+                }                
             }
             else
             {
                 PromptDialog.Text(context, Find_NamePrompt, "Sorry, but I cannot understand the name. Could you please repeat that?");
-            }
-
+            }            
         }
 
         private async Task After_NamePrompt(IDialogContext context, IAwaitable<string> result)
         {
             EntityRecommendation name;
-            // Set the title (used for creation, deletion, and reading)
             currentName = await result;
             if (currentName != null)
             {
                 name = new EntityRecommendation(type: Entity_Communication_Name) { Entity = currentName };
-                var comm = new Communication() { ContactName = name.Entity };
-                contact = this.communicationByContact[comm.ContactName] = comm;
+                var comm = new Communication() { ContactName = currentName };
+                contact = communicationByContact[comm.ContactName] = comm;
 
                 PromptDialog.Text(context, After_NumberPrompt, $"**{currentName}** is the name of contact. What's the number ?");
             }
             else
             {
                 PromptDialog.Text(context, After_NamePrompt, "Sorry, but I cannot understand the name. Could you please repeat that?");
+                context.Wait(MessageReceived);
             }           
 
         }
@@ -215,11 +218,9 @@ namespace bot_chat.Dialogs
         private async Task After_NumberPrompt(IDialogContext context, IAwaitable<string> result)
         {
             // Set the text of the note
-            contact.ContactAttribute = await result;
+            this.contact.ContactAttribute = await result;
 
-            await context.PostAsync($"'Created contact **{this.contact.ContactName}** with \"{this.contact.ContactAttribute}\".");
-
-            context.Wait(MessageReceived);
+            await context.PostAsync($"'Created contact **{this.contact.ContactName}** with \"{this.contact.ContactAttribute}\".");            
         }
                 
     }
